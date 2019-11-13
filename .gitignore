@@ -44,3 +44,5 @@
 *.log
 *.sh
 *.txt
+*.ppm
+*.png
