@@ -38,11 +38,14 @@
 
 # End of https://www.gitignore.io/api/c++
 
+
+# MIO
+
+*.ppm
 *.tex
 *.pdf
 *.tar.gz
 *.log
 *.sh
 *.txt
-*.ppm
 *.png
