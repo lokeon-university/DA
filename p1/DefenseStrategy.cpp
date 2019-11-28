@@ -173,7 +173,7 @@ float cellDefenseValue(int row, int col, int nCellsWidth, int nCellsHeight, floa
 
 bool sortByDamage(Defense *d1, Defense *d2)
 {
-    return (d1->damage * d1->attacksPerSecond) > (d2->damage * d2->attacksPerSecond);
+    return (d1->damage * d1->attacksPerSecond ) > (d2->damage * d2->attacksPerSecond);
 }
 
 void DEF_LIB_EXPORTED placeDefenses(bool **freeCells, int nCellsWidth, int nCellsHeight, float mapWidth, float mapHeight, std::list<Object *> obstacles, std::list<Defense *> defenses)

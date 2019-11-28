@@ -30,9 +30,9 @@ void changeValueDefense(std::vector<std::vector<int>> &matriz, std::list<Defense
         }
     }
 
-    for (int j = 1; j < defenses.size(); j++)
+    for (int j = 1; j < defenses.size(); j++, itDefe++)
     {
-        for (int k = 0; k <= ases; k++,itDefe++)
+        for (int k = 0; k <= ases; k++)
         {
             if (k < (*itDefe)->cost)
             {
@@ -46,8 +46,43 @@ void changeValueDefense(std::vector<std::vector<int>> &matriz, std::list<Defense
     }
 }
 
+void bestCombination(std::vector<std::vector<int>> &matriz, std::list<int> &selectedIDs, std::list<Defense *> defenses, std::list<Defense *>::iterator itDefe, int idDefense, unsigned int ases)
+{
+    int j = ases;
+
+    for (int i = defenses.size() - 1; i > 0; --i, --itDefe)
+    {
+        if (matriz[i][j] != matriz[i - 1][j])
+        {
+
+            selectedIDs.push_front((*itDefe)->id);
+            ases -= (*itDefe)->cost;
+            j -= (*itDefe)->cost;
+        }
+    }
+
+    if (matriz[1][j] != 0)
+    {
+        selectedIDs.push_front((*defenses.begin())->id);
+    }
+
+    selectedIDs.push_front(idDefense);
+}
+
 void DEF_LIB_EXPORTED selectDefenses(std::list<Defense *> defenses, unsigned int ases, std::list<int> &selectedIDs, float mapWidth, float mapHeight, std::list<Object *> obstacles)
 {
-    //std::list<Defense*>::iterator itDefe = defenses.begin();
-   
+
+    std::list<Defense *>::iterator itDefe = defenses.end();
+    --itDefe;
+
+    // Primera defensa
+    ases -= (*defenses.begin())->cost;
+    int idDefense = (*defenses.begin())->id;
+
+    defenses.pop_front();
+    std::vector<std::vector<int>> matriz(defenses.size(), std::vector<int>(ases + 1));
+
+    changeValueDefense(matriz, defenses, ases);
+
+    bestCombination(matriz, selectedIDs, defenses, itDefe, idDefense, ases);
 }
