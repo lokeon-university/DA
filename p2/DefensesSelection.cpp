@@ -11,7 +11,7 @@ using namespace Asedio;
 
 int defenseValue(Defense *d)
 {
-    return (((d->damage * d->attacksPerSecond * d->range) + d->health) / d->dispersion);
+    return (((d->damage * d->attacksPerSecond * d->range) + d->health));
 }
 
 void changeValueDefense(std::vector<std::vector<int>> &matriz, std::list<Defense *> defenses, unsigned int ases)
@@ -34,13 +34,13 @@ void changeValueDefense(std::vector<std::vector<int>> &matriz, std::list<Defense
     {
         for (int k = 0; k <= ases; k++)
         {
-            if (k < (*itDefe)->cost)
+            if (k >= (*itDefe)->cost)
             {
-                matriz[j][k] = matriz[j - 1][k];
+                matriz[j][k] = std::max(matriz[j - 1][k], matriz[j - 1][k - (*itDefe)->cost] + defenseValue(*itDefe));
             }
             else
             {
-                matriz[j][k] = std::max(matriz[j - 1][k], matriz[j - 1][k - (*itDefe)->cost] + defenseValue(*itDefe));
+                matriz[j][k] = matriz[j - 1][k];
             }
         }
     }
@@ -54,16 +54,9 @@ void bestCombination(std::vector<std::vector<int>> &matriz, std::list<int> &sele
     {
         if (matriz[i][j] != matriz[i - 1][j])
         {
-
             selectedIDs.push_front((*itDefe)->id);
             ases -= (*itDefe)->cost;
-            j -= (*itDefe)->cost;
         }
-    }
-
-    if (matriz[1][j] != 0)
-    {
-        selectedIDs.push_front((*defenses.begin())->id);
     }
 
     selectedIDs.push_front(idDefense);
