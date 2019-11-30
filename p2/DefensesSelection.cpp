@@ -11,7 +11,7 @@ using namespace Asedio;
 
 int defenseValue(Defense *d)
 {
-    return (((2 * d->damage * d->attacksPerSecond * d->range)));
+    return (((d->damage * d->attacksPerSecond * d->range * d->health * d->dispersion)) / d->cost);
 }
 
 void changeValueDefense(std::vector<std::vector<int>> &matriz, std::list<Defense *> defenses, unsigned int ases)
