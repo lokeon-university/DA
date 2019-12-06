@@ -11,7 +11,7 @@ using namespace Asedio;
 
 int defenseValue(Defense *d)
 {
-    return (((std::pow(d->damage, 2) * d->attacksPerSecond * d->range * d->health * d->dispersion)) / d->cost);
+    return (((pow(d->damage, 2) * d->attacksPerSecond * d->range) / (d->cost * d->dispersion)) * d->radio);
 }
 
 void changeValueDefense(std::vector<std::vector<int>> &matriz, std::list<Defense *> defenses, unsigned int ases)
@@ -50,12 +50,11 @@ void bestCombination(std::vector<std::vector<int>> &matriz, std::list<int> &sele
 {
     int j = ases;
 
-    for (int i = defenses.size() - 1; i > 0 && ases > 0; --i, --itDefe)
+    for (int i = defenses.size() - 1; i > 0 && j > 0; --i, --itDefe)
     {
         if (matriz[i][j] != matriz[i - 1][j])
         {
             selectedIDs.push_back((*itDefe)->id);
-            ases -= (*itDefe)->cost;
             j -= (*itDefe)->cost;
         }
     }
@@ -71,7 +70,7 @@ void DEF_LIB_EXPORTED selectDefenses(std::list<Defense *> defenses, unsigned int
     ases -= (*defenses.begin())->cost;
     selectedIDs.push_front((*defenses.begin())->id);
     defenses.pop_front();
-
+    
     std::vector<std::vector<int>> matriz(defenses.size(), std::vector<int>(ases + 1));
 
     changeValueDefense(matriz, defenses, ases);
