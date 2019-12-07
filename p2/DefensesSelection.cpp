@@ -11,7 +11,16 @@ using namespace Asedio;
 
 int defenseValue(Defense *d)
 {
-    return (((pow(d->damage, 2) * d->attacksPerSecond * d->range) / (d->cost * d->dispersion)) * d->radio);
+    return (((d->damage * d->attacksPerSecond * d->range * d->radio) - 0.3 * (d->cost * d->dispersion)));
+}
+
+void defenseCost(std::vector<int> &defCost, std::list<Defense *> defense)
+{
+    std::list<Defense *>::iterator itDefe;
+    for (itDefe = defense.begin(); itDefe != defense.end(); ++itDefe)
+    {
+        defCost.push_back((*itDefe)->cost);
+    }
 }
 
 void changeValueDefense(std::vector<std::vector<int>> &matriz, std::list<Defense *> defenses, unsigned int ases)
@@ -46,34 +55,31 @@ void changeValueDefense(std::vector<std::vector<int>> &matriz, std::list<Defense
     }
 }
 
-void bestCombination(std::vector<std::vector<int>> &matriz, std::list<int> &selectedIDs, std::list<Defense *> defenses, std::list<Defense *>::iterator itDefe, unsigned int ases)
+void bestCombination(std::vector<std::vector<int>> &matriz, std::list<int> &selectedIDs, std::list<Defense *> defenses, unsigned int ases)
 {
     int j = ases;
+    std::vector<int> defCost;
+    defenseCost(defCost, defenses);
 
-    for (int i = defenses.size() - 1; i > 0 && j > 0; --i, --itDefe)
+    for (int i = defenses.size() - 1; i > 0 && j > 0; --i)
     {
         if (matriz[i][j] != matriz[i - 1][j])
         {
-            selectedIDs.push_back((*itDefe)->id);
-            j -= (*itDefe)->cost;
+            selectedIDs.push_back(i);
+            j -= defCost.at(i);
         }
     }
 }
 
 void DEF_LIB_EXPORTED selectDefenses(std::list<Defense *> defenses, unsigned int ases, std::list<int> &selectedIDs, float mapWidth, float mapHeight, std::list<Object *> obstacles)
 {
-
-    std::list<Defense *>::iterator itDefe = defenses.end();
-    --itDefe;
-
     // Primera defensa
-    ases -= (*defenses.begin())->cost;
     selectedIDs.push_front((*defenses.begin())->id);
-    defenses.pop_front();
-    
+    ases -= (*defenses.begin())->cost;
+
     std::vector<std::vector<int>> matriz(defenses.size(), std::vector<int>(ases + 1));
 
     changeValueDefense(matriz, defenses, ases);
 
-    bestCombination(matriz, selectedIDs, defenses, itDefe, ases);
+    bestCombination(matriz, selectedIDs, defenses, ases);
 }
