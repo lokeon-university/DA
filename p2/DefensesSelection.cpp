@@ -55,7 +55,7 @@ void changeValueDefense(std::vector<std::vector<int>> &matriz, std::list<Defense
     }
 }
 
-void bestCombination(std::vector<std::vector<int>> &matriz, std::list<int> &selectedIDs, std::list<Defense *> defenses, unsigned int ases)
+void tableResult(std::vector<std::vector<int>> &matriz, std::list<int> &selectedIDs, std::list<Defense *> defenses, unsigned int ases)
 {
     int j = ases;
     std::vector<int> defCost;
@@ -81,5 +81,5 @@ void DEF_LIB_EXPORTED selectDefenses(std::list<Defense *> defenses, unsigned int
 
     changeValueDefense(matriz, defenses, ases);
 
-    bestCombination(matriz, selectedIDs, defenses, ases);
+    tableResult(matriz, selectedIDs, defenses, ases);
 }
