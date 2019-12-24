@@ -1,6 +1,8 @@
 // ###### Config options ################
 
 #define PRINT_PATHS 1
+// valorar celdas segun la f y la heuristica , el camino de los uco es de donde sale(bordes) hsata el centro de extraccion
+// targt_node : centro de extraccion OBJETIVO: conseguir menos tiempo -> ahora somos UCOS queremos destruir defensas
 
 // #######################################
 
@@ -19,6 +21,7 @@ Vector3 cellCenterToPosition(int i, int j, float cellWidth, float cellHeight){
     return Vector3((j * cellWidth) + cellWidth * 0.5f, (i * cellHeight) + cellHeight * 0.5f, 0); 
 }
 
+// rellenar la matriz de costes , no tocar , hasta implementar el Algoritmo A*, luego tocar esto pa tener mejor cosas
 void DEF_LIB_EXPORTED calculateAdditionalCost(float** additionalCost
                    , int cellsWidth, int cellsHeight, float mapWidth, float mapHeight
                    , List<Object*> obstacles, List<Defense*> defenses) {
@@ -38,7 +41,8 @@ void DEF_LIB_EXPORTED calculateAdditionalCost(float** additionalCost
         }
     }
 }
-
+// AStarNODE* tiene to la informacion pa implementar el Algoritmo A*
+// meter el camino recorriendo los padres de AsterNode y meterlo en path (push_back) orden de origen->destino
 void DEF_LIB_EXPORTED calculatePath(AStarNode* originNode, AStarNode* targetNode
                    , int cellsWidth, int cellsHeight, float mapWidth, float mapHeight
                    , float** additionalCost, std::list<Vector3> &path) {

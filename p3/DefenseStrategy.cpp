@@ -10,21 +10,82 @@
 
 using namespace Asedio;
 
-float defaultCellValue(int row, int col, bool **freeCells, int nCellsWidth, int nCellsHeight, float mapWidth, float mapHeight, List<Object *> obstacles, List<Defense *> defenses)
+Vector3 cellCenterToPosition(int i, int j, float cellWidth, float cellHeight) { return Vector3((j * cellWidth) + cellWidth * 0.5f, (i * cellHeight) + cellHeight * 0.5f, 0); }
+void positionToCell(const Vector3 pos, int &i_out, int &j_out, float cellWidth, float cellHeight)
 {
+    i_out = (int)(pos.y * 1.0f / cellHeight);
+    j_out = (int)(pos.x * 1.0f / cellWidth);
+}
 
+float defaultCellValue(int row, int col, int nCellsWidth, int nCellsHeight, float mapWidth, float mapHeight, List<Object *> obstacles, Defense *defense)
+{
+    float distanceToObs = INF_F;
     float cellWidth = mapWidth / nCellsWidth;
     float cellHeight = mapHeight / nCellsHeight;
+    float distanceUp, distanceDown, distanceCenter, distanceToFirstDefense;
+    List<Object *>::iterator itObs;
+    Vector3 position = cellCenterToPosition(row, col, cellWidth, cellHeight);
 
-    Vector3 cellPosition((col * cellWidth) + cellWidth * 0.5f, (row * cellHeight) + cellHeight * 0.5f, 0);
-
-    float val = 0;
-    for (List<Object *>::iterator it = obstacles.begin(); it != obstacles.end(); ++it)
+    for (itObs = obstacles.begin(); itObs != obstacles.end(); ++itObs)
     {
-        val += _distance(cellPosition, (*it)->position);
+        if (distanceToObs > _distance(position, (*itObs)->position))
+        {
+            distanceToObs = _distance(position, (*itObs)->position);
+        }
     }
 
-    return val;
+    distanceToFirstDefense = _distance((defense)->position, position);
+    distanceCenter = abs(row - cellWidth / 2) + abs(col - cellHeight / 2);
+    distanceDown = _distance(position, Vector3(position.x, mapWidth, 0));
+    distanceUp = _distance(position, Vector3(position.x, 0, 0));
+
+    return (distanceDown + distanceUp) - (0.5 * distanceToObs + distanceCenter + 2 * distanceToFirstDefense);
+}
+
+bool factibilidad(int row, int col, int nCellsWidth, int nCellsHeight, float mapWidth, float mapHeight, int idDef, List<Object *> obstacles, List<Defense *> defenses)
+{
+    Vector3 walls = cellCenterToPosition(row, col, mapWidth / nCellsWidth, mapHeight / nCellsHeight);
+    std::list<Defense *>::iterator itWall, itDefe;
+    std::list<Object *>::iterator itObs;
+    bool factible = true;
+
+    for (itWall = defenses.begin(); (*itWall)->id != idDef; ++itWall)
+    {
+        if (itWall == defenses.end())
+        {
+            factible = false;
+        }
+    }
+
+    for (itDefe = defenses.begin(); itDefe != defenses.end() && factible; ++itDefe)
+    {
+        if (_distance(walls, (*itDefe)->position) < (*itWall)->radio + (*itDefe)->radio)
+        {
+            factible = false;
+        }
+    }
+
+    for (itObs = obstacles.begin(); itObs != obstacles.end() && factible; ++itObs)
+    {
+        if (_distance(walls, (*itObs)->position) < (*itWall)->radio + (*itObs)->radio)
+        {
+            factible = false;
+        }
+    }
+
+    //Tamaño
+    if (row < 0 || row > nCellsHeight || col < 0 || col > nCellsWidth)
+    {
+        factible = false;
+    }
+
+    //Esquinas
+    if (_distance(Vector3(0.0, walls.y, 0.0), walls) < (*itWall)->radio || _distance(Vector3(walls.x, 0.0, 0.0), walls) < (*itWall)->radio || _distance(Vector3(mapWidth, walls.y, 0.0), walls) < (*itWall)->radio || _distance(Vector3(walls.x, mapHeight, 0.0), walls) < (*itWall)->radio)
+    {
+        factible = false;
+    }
+
+    return factible;
 }
 
 void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCellsHeight, float mapWidth, float mapHeight, List<Object *> obstacles, List<Defense *> defenses)
@@ -32,25 +93,90 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
 
     float cellWidth = mapWidth / nCellsWidth;
     float cellHeight = mapHeight / nCellsHeight;
-    int maxAttemps = 1231;
+    std::vector<std::vector<float>> defaultValues(nCellsHeight, std::vector<float>(nCellsWidth));
+    std::vector<std::vector<float>> fusionValues, heapValues, quickValues, noorderValues;
+    int row, col;
 
-    cronometro c;
+    cronometro cFusion, cMonticulo, cRapido, cNOrden;
     long int r = 0;
-    c.activar();
+
+    for (int i = 0; i < nCellsHeight; ++i)
+    {
+        for (int j = 0; j < nCellsWidth; ++j)
+        {
+            defaultValues[i][j] = defaultCellValue(i, j, nCellsWidth, nCellsHeight, mapWidth, mapHeight, obstacles, defenses);
+        }
+    }
+
     do
     {
         List<Defense *>::iterator currentDefense = defenses.begin();
-        while (currentDefense != defenses.end() && maxAttemps > 0)
+        //----------- FUSION -----------//
+        fusionValues = defaultValues;
+        cFusion.activar();
+        while (currentDefense != defenses.end())
+        {
+            Vector3 positionSelect = cellCenterToPosition(row, col, cellWidth, cellHeight);
+
+            if (factibilidad(row, col, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
+            {
+                (*currentDefense)->position = positionSelect;
+                ++currentDefense;
+            }
+        }
+        cFusion.parar();
+
+        //----------- MONTICULO -----------//
+        heapValues = defaultValues;
+        cMonticulo.activar();
+        List<Defense *>::iterator currentDefense = defenses.begin();
+        while (currentDefense != defenses.end())
         {
 
-            (*currentDefense)->position.x = ((int)(_RAND2(nCellsWidth))) * cellWidth + cellWidth * 0.5f;
-            (*currentDefense)->position.y = ((int)(_RAND2(nCellsHeight))) * cellHeight + cellHeight * 0.5f;
-            (*currentDefense)->position.z = 0;
-            ++currentDefense;
+            if (factibilidad(row, col, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
+            {
+                (*currentDefense)->position = positionSelect;
+                ++currentDefense;
+            }
         }
+        cMonticulo.parar();
 
-        ++r;
-    } while (c.tiempo() < 1.0);
-    c.parar();
-    std::cout << (nCellsWidth * nCellsHeight) << '\t' << c.tiempo() / r << '\t' << c.tiempo() * 2 / r << '\t' << c.tiempo() * 3 / r << '\t' << c.tiempo() * 4 / r << std::endl;
+        //----------- RAPIDO -----------//
+        quickValues = defaultValues;
+        cRapido.activar();
+        List<Defense *>::iterator currentDefense = defenses.begin();
+        while (currentDefense != defenses.end())
+        {
+
+            if (factibilidad(row, col, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
+            {
+                (*currentDefense)->position = positionSelect;
+                ++currentDefense;
+            }
+        }
+        cRapido.parar();
+
+        //----------- SIN ORDEN -----------//
+        noorderValues = defaultValues;
+        cNOrden.activar();
+        List<Defense *>::iterator currentDefense = defenses.begin();
+        while (currentDefense != defenses.end())
+        {
+
+            if (factibilidad(row, col, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
+            {
+                (*currentDefense)->position = positionSelect;
+                ++currentDefense;
+            }
+        }
+        cNOrden.parar();
+
+    } while (cFusion.tiempo() + cRapido.tiempo() + cNOrden.tiempo() + cMonticulo.tiempo() < 1.0);
+
+    std::cout << (nCellsWidth * nCellsHeight)
+              << '\t' << "Fusion: " << cFusion.tiempo()
+              << '\t' << "Rapido: " << cRapido.tiempo()
+              << '\t' << "Sin orden: " << cNOrden.tiempo()
+              << '\t' << "Monticulo: " << cMonticulo.tiempo()
+              << std::endl;
 }
