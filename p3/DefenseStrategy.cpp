@@ -104,19 +104,22 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
     {
         for (int j = 0; j < nCellsWidth; ++j)
         {
-            defaultValues[i][j] = defaultCellValue(i, j, nCellsWidth, nCellsHeight, mapWidth, mapHeight, obstacles, defenses);
+            defaultValues[i][j] = defaultCellValue(i, j, nCellsWidth, nCellsHeight, mapWidth, mapHeight, obstacles, *defenses.begin());
         }
     }
 
     do
     {
         List<Defense *>::iterator currentDefense = defenses.begin();
+
         //----------- FUSION -----------//
         fusionValues = defaultValues;
         cFusion.activar();
+        
         while (currentDefense != defenses.end())
         {
-            Vector3 positionSelect = cellCenterToPosition(row, col, cellWidth, cellHeight);
+            Vector3 positionSelect = (*currentDefense)->position;
+            positionToCell(positionSelect, row, col, cellWidth, cellHeight);
 
             if (factibilidad(row, col, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
             {
@@ -128,10 +131,13 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
 
         //----------- MONTICULO -----------//
         heapValues = defaultValues;
+        currentDefense = defenses.begin();
         cMonticulo.activar();
         List<Defense *>::iterator currentDefense = defenses.begin();
         while (currentDefense != defenses.end())
         {
+            Vector3 positionSelect = (*currentDefense)->position;
+            positionToCell(positionSelect, row, col, cellWidth, cellHeight);
 
             if (factibilidad(row, col, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
             {
@@ -143,10 +149,13 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
 
         //----------- RAPIDO -----------//
         quickValues = defaultValues;
+        currentDefense = defenses.begin();
         cRapido.activar();
         List<Defense *>::iterator currentDefense = defenses.begin();
         while (currentDefense != defenses.end())
         {
+            Vector3 positionSelect = (*currentDefense)->position;
+            positionToCell(positionSelect, row, col, cellWidth, cellHeight);
 
             if (factibilidad(row, col, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
             {
@@ -158,10 +167,13 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
 
         //----------- SIN ORDEN -----------//
         noorderValues = defaultValues;
+        currentDefense = defenses.begin();
         cNOrden.activar();
         List<Defense *>::iterator currentDefense = defenses.begin();
         while (currentDefense != defenses.end())
         {
+            Vector3 positionSelect = (*currentDefense)->position;
+            positionToCell(positionSelect, row, col, cellWidth, cellHeight);
 
             if (factibilidad(row, col, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
             {
