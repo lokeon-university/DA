@@ -40,7 +40,7 @@
 
 
 # MIO
-
+*.plot
 *.ppm
 *.tex
 *.pdf
