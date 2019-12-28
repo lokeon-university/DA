@@ -203,6 +203,12 @@ void quickSort(std::vector<defensePosition> &v, int i, int j)
     }
 }
 
+void heapSort(std::vector<defensePosition> &v)
+{
+    std::make_heap(v.begin(), v.end());
+    std::sort_heap(v.begin(), v.end());
+}
+
 void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCellsHeight, float mapWidth, float mapHeight, List<Object *> obstacles, List<Defense *> defenses)
 {
 
@@ -225,13 +231,12 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
         }
     }
 
+    //----------- FUSION -----------//
     fusionValues = defaultValues;
     currentDefense = defenses.begin();
     cFusion.activar();
     do
     {
-
-        //----------- FUSION -----------//
         fusionSort(fusionValues, 0, fusionValues.size() - 1);
 
         while (currentDefense != defenses.end() && maxAttemps > 0)
@@ -252,17 +257,14 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
     } while (cFusion.tiempo() < (0.01 / (0.1 + 0.01)));
     cFusion.parar();
 
+    //----------- HEAP -----------//
     heapValues = defaultValues;
     currentDefense = defenses.begin();
     maxAttemps = 1000;
     cHeap.activar();
     do
     {
-
-        //----------- HEAP -----------//
-        std::make_heap(heapValues.begin(), heapValues.end());
-        std::sort_heap(heapValues.begin(), heapValues.end());
-
+        heapSort(heapValues);
         while (currentDefense != defenses.end() && maxAttemps > 0)
         {
             Vector3 positionSelect = cellCenterToPosition(heapValues[heapValues.size() - 1].x_, heapValues[heapValues.size() - 1].y_, cellWidth, cellHeight);
@@ -282,13 +284,13 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
     } while (cHeap.tiempo() < (0.01 / (0.1 + 0.01)));
     cHeap.parar();
 
+    //----------- QUICK -----------//
     quickValues = defaultValues;
     currentDefense = defenses.begin();
     maxAttemps = 1000;
     cQuick.activar();
     do
     {
-        //----------- QUICK -----------//
         quickSort(quickValues, 0, quickValues.size() - 1);
 
         while (currentDefense != defenses.end() && maxAttemps > 0)
@@ -311,13 +313,13 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
     } while (cQuick.tiempo() < (0.01 / (0.1 + 0.01)));
     cQuick.parar();
 
+    //----------- NO ORDER -----------//
     noorderValues = defaultValues;
     currentDefense = defenses.begin();
     maxAttemps = 1000;
     cNOrden.activar();
     do
     {
-        //----------- NO ORDER -----------//
 
         while (currentDefense != defenses.end() && maxAttemps > 0)
         {

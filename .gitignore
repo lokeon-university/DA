@@ -51,3 +51,4 @@
 *.png
 *.aux
 pruebas*
+*copy*.cpp
