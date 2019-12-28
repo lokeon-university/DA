@@ -47,17 +47,27 @@ void positionToCell(const Vector3 pos, int &i_out, int &j_out, float cellWidth, 
 
 float defaultCellValue(int row, int col, int nCellsWidth, int nCellsHeight, float mapWidth, float mapHeight, List<Object *> obstacles, Defense *defense)
 {
+    float distanceToObs = INF_F;
     float cellWidth = mapWidth / nCellsWidth;
     float cellHeight = mapHeight / nCellsHeight;
-    float value = 0;
-    Vector3 position((col * cellWidth) + cellWidth * 0.5f, (row * cellHeight) + cellHeight * 0.5f, 0);
+    float distanceUp, distanceDown, distanceCenter, distanceToFirstDefense;
+    List<Object *>::iterator itObs;
+    Vector3 position = cellCenterToPosition(row, col, cellWidth, cellHeight);
 
-    for (List<Object *>::iterator it = obstacles.begin(); it != obstacles.end(); ++it)
+    for (itObs = obstacles.begin(); itObs != obstacles.end(); ++itObs)
     {
-        value += _distance(position, (*it)->position);
+        if (distanceToObs > _distance(position, (*itObs)->position))
+        {
+            distanceToObs = _distance(position, (*itObs)->position);
+        }
     }
 
-    return value;
+    distanceToFirstDefense = _distance((defense)->position, position);
+    distanceCenter = abs(row - cellWidth / 2) + abs(col - cellHeight / 2);
+    distanceDown = _distance(position, Vector3(position.x, mapWidth, 0));
+    distanceUp = _distance(position, Vector3(position.x, 0, 0));
+
+    return (distanceDown + distanceUp) - (0.5 * distanceToObs + distanceCenter + 2 * distanceToFirstDefense);
 }
 
 bool factibilidad(int row, int col, int nCellsWidth, int nCellsHeight, float mapWidth, float mapHeight, int idDef, List<Object *> obstacles, List<Defense *> defenses)
@@ -224,9 +234,7 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
     List<Defense *>::iterator currentDefense;
     long int rFusion = 0, rQuick = 0, rHeap = 0, rNoOrder = 0;
     int row, col, maxAttemps = 1000;
-
     cronometro cFusion, cHeap, cQuick, cNOrden;
-    long int r = 0;
 
     for (int i = 0; i < nCellsHeight; ++i)
     {
@@ -248,6 +256,7 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
 
             while (currentDefense != defenses.end() && maxAttemps > 0)
             {
+
                 std::vector<defensePosition>::iterator itNoOrder =
                     std::max_element(noorderValues.begin(), noorderValues.end());
                 defensePosition maxValue = (*itNoOrder);
@@ -349,10 +358,10 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
         } while (cHeap.tiempo() < (0.01 / (0.1 + 0.01)));
         cHeap.parar();
     }
-    for (int i = 0; i < quickValues.size(); ++i)
-    {
-        std::cout << quickValues[i] << std::endl;
-    }
+    // for (int i = 0; i < quickValues.size(); ++i)
+    // {
+    //     std::cout << quickValues[i] << std::endl;
+    // }
 
     std::cout << (nCellsWidth * nCellsHeight)
               << '\t' << cNOrden.tiempo() / rNoOrder
