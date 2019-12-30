@@ -303,78 +303,78 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
     cNOrden.parar();
 
     //----------- FUSION -----------//
-    fusionValues = defaultValues;
-    currentDefense = defenses.begin();
-    cFusion.activar();
-    do
-    {
-        fusionSort(fusionValues, 0, fusionValues.size() - 1);
-        while (currentDefense != defenses.end())
-        {
-            itFusion = fusionValues.end() - 1;
-            Vector3 positionSelect = cellCenterToPosition((itFusion)->x_, (itFusion)->y_, cellWidth, cellHeight);
-            if (factibilidad((itFusion)->x_, (itFusion)->y_, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
-            {
-                (*currentDefense)->position = positionSelect;
-                ++currentDefense;
-            }
+    // fusionValues = defaultValues;
+    // currentDefense = defenses.begin();
+    // cFusion.activar();
+    // do
+    // {
+    //     fusionSort(fusionValues, 0, fusionValues.size() - 1);
+    //     while (currentDefense != defenses.end())
+    //     {
+    //         itFusion = fusionValues.end() - 1;
+    //         Vector3 positionSelect = cellCenterToPosition((itFusion)->x_, (itFusion)->y_, cellWidth, cellHeight);
+    //         if (factibilidad((itFusion)->x_, (itFusion)->y_, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
+    //         {
+    //             (*currentDefense)->position = positionSelect;
+    //             ++currentDefense;
+    //         }
 
-            fusionValues.pop_back();
-        }
-        rFusion++;
+    //         fusionValues.pop_back();
+    //     }
+    //     rFusion++;
 
-    } while (cFusion.tiempo() < (0.01 / (0.001 + 0.01)));
-    cFusion.parar();
+    // } while (cFusion.tiempo() < (0.01 / (0.001 + 0.01)));
+    // cFusion.parar();
 
     //----------- QUICK -----------//
-    quickValues = defaultValues;
-    currentDefense = defenses.begin();
-    cQuick.activar();
-    do
-    {
-        quickSort(quickValues, 0, quickValues.size() - 1);
+    // quickValues = defaultValues;
+    // currentDefense = defenses.begin();
+    // cQuick.activar();
+    // do
+    // {
+    //     quickSort(quickValues, 0, quickValues.size() - 1);
 
-        while (currentDefense != defenses.end())
-        {
-            itQuick = quickValues.end() - 1;
-            Vector3 positionSelect = cellCenterToPosition((itQuick)->x_, (itQuick)->y_, cellWidth, cellHeight);
-            if (factibilidad((itQuick->x_), (itQuick->y_), nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
-            {
-                (*currentDefense)->position = positionSelect;
-                ++currentDefense;
-            }
+    //     while (currentDefense != defenses.end())
+    //     {
+    //         itQuick = quickValues.end() - 1;
+    //         Vector3 positionSelect = cellCenterToPosition((itQuick)->x_, (itQuick)->y_, cellWidth, cellHeight);
+    //         if (factibilidad((itQuick->x_), (itQuick->y_), nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
+    //         {
+    //             (*currentDefense)->position = positionSelect;
+    //             ++currentDefense;
+    //         }
 
-            quickValues.pop_back();
-        }
-        rQuick++;
+    //         quickValues.pop_back();
+    //     }
+    //     rQuick++;
 
-    } while (cQuick.tiempo() < (0.01 / (0.001 + 0.01)));
-    cQuick.parar();
+    // } while (cQuick.tiempo() < (0.01 / (0.001 + 0.01)));
+    // cQuick.parar();
 
     //----------- HEAP -----------//
-    heapValues = defaultValues;
-    currentDefense = defenses.begin();
-    cHeap.activar();
-    do
-    {
-        heapSort(heapValues);
-        while (currentDefense != defenses.end())
-        {
-            itHeap = heapValues.end() - 1;
-            Vector3 positionSelect = cellCenterToPosition((itHeap)->x_, (itHeap)->y_, cellWidth, cellHeight);
-            if (factibilidad((itHeap)->x_, (itHeap)->y_, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
-            {
-                (*currentDefense)->position = positionSelect;
-                ++currentDefense;
-            }
+    // heapValues = defaultValues;
+    // currentDefense = defenses.begin();
+    // cHeap.activar();
+    // do
+    // {
+    //     heapSort(heapValues);
+    //     while (currentDefense != defenses.end())
+    //     {
+    //         itHeap = heapValues.end() - 1;
+    //         Vector3 positionSelect = cellCenterToPosition((itHeap)->x_, (itHeap)->y_, cellWidth, cellHeight);
+    //         if (factibilidad((itHeap)->x_, (itHeap)->y_, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
+    //         {
+    //             (*currentDefense)->position = positionSelect;
+    //             ++currentDefense;
+    //         }
 
-            heapValues.pop_back();
-        }
+    //         heapValues.pop_back();
+    //     }
 
-        rHeap++;
+    //     rHeap++;
 
-    } while (cHeap.tiempo() < (0.01 / (0.001 + 0.01)));
-    cHeap.parar();
+    // } while (cHeap.tiempo() < (0.01 / (0.001 + 0.01)));
+    // cHeap.parar();
 
     // for (int i = 0; i < fusionValues.size(); ++i)
     // {
