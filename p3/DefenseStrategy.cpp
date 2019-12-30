@@ -191,258 +191,34 @@ void fusionSort(std::vector<defensePosition> &v, int i, int j)
     }
 }
 
-int partition(std::vector<defensePosition> &v, int i, int j)
-{
-    int left, right;
-    defensePosition pivot = v[i];
-
-    left = i;
-    right = j;
-
-    while (left < right)
-    {
-        while (v[right] > pivot)
-        {
-            right--;
-        }
-        while ((left < right) && (v[left] <= pivot))
-        {
-            left++;
-        }
-
-        if (left < right)
-        {
-            std::swap(v[left], v[right]);
-        }
-    }
-
-    std::swap(v[right], v[i]);
-
-    return right;
-}
-
-void quickSort(std::vector<defensePosition> &v, int i, int j)
-{
-    int n = j - i + 1;
-
-    if (n <= 5)
-    {
-        insertionSort(v, i, j);
-    }
-    else
-    {
-        int pivot = partition(v, i, j);
-
-        quickSort(v, i, pivot - 1);
-        quickSort(v, pivot + 1, j);
-    }
-}
-
-void heapSort(std::vector<defensePosition> &v)
-{
-    std::make_heap(v.begin(), v.end());
-    std::sort_heap(v.begin(), v.end());
-}
-
-void matrizSort(std::vector<std::vector<float>> &v, int nCellsHeight, int nCellsWidth)
-{
-    for (int i = 0; i < nCellsHeight; i++)
-    {
-        for (int j = 0; j < nCellsWidth; j++)
-        {
-            for (int l = 0; l < nCellsHeight; l++)
-            {
-                for (int m = 0; m < nCellsWidth; m++)
-                {
-                    if (v[i][j] < v[l][m])
-                    {
-                        std::swap(v[i][j], v[l][m]);
-                    }
-                }
-            }
-        }
-    }
-}
-
-std::vector<defensePosition>::iterator noOrderSort(std::vector<defensePosition> &v)
-{
-    std::vector<defensePosition>::iterator maxValue = v.begin();
-    for (std::vector<defensePosition>::iterator it = v.begin(); it != v.end(); it++)
-    {
-        if ((it)->value_ > (maxValue)->value_)
-        {
-            maxValue = it;
-        }
-    }
-
-    return maxValue;
-}
-
 void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCellsHeight, float mapWidth, float mapHeight, List<Object *> obstacles, List<Defense *> defenses)
 {
 
     float cellWidth = mapWidth / nCellsWidth;
     float cellHeight = mapHeight / nCellsHeight;
-    std::vector<std::vector<float>> defaultValues(nCellsHeight, std::vector<float>(nCellsWidth));
-    std::vector<defensePosition> fusionValues, heapValues, quickValues, noorderValues;
-    std::vector<defensePosition>::iterator itFusion, itHeap, itQuick, maxValue;
-    List<Defense *>::iterator currentDefense;
-    long int rFusion = 0, rQuick = 0, rHeap = 0, rNoOrder = 0;
-    int row, col, maxAttemps;
-    cronometro cFusion, cHeap, cQuick, cNOrden;
+    std::vector<defensePosition> fusionValues;
+    std::vector<defensePosition>::iterator itFusion;
+    List<Defense *>::iterator currentDefense = defenses.begin();
 
     for (int i = 0; i < nCellsHeight; ++i)
     {
         for (int j = 0; j < nCellsWidth; ++j)
         {
-            defaultValues[i][j] = defaultCellValue(i, j, nCellsWidth, nCellsHeight, mapWidth, mapHeight, obstacles, *defenses.begin());
+            fusionValues.push_back(defensePosition(i, j, defaultCellValue(i, j, nCellsWidth, nCellsHeight, mapWidth, mapHeight, obstacles, *defenses.begin())));
         }
     }
 
-    matrizSort(defaultValues, nCellsHeight, nCellsWidth);
-
-    for (int i = 0; i < nCellsHeight; ++i)
+    fusionSort(fusionValues, 0, fusionValues.size() - 1);
+    while (currentDefense != defenses.end())
     {
-        for (int j = 0; j < nCellsWidth; ++j)
+        itFusion = fusionValues.end() - 1;
+        Vector3 positionSelect = cellCenterToPosition((itFusion)->x_, (itFusion)->y_, cellWidth, cellHeight);
+        if (factibilidad((itFusion)->x_, (itFusion)->y_, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
         {
-            fusionValues.push_back(defensePosition(i, j, defaultValues[i][j]));
+            (*currentDefense)->position = positionSelect;
+            ++currentDefense;
         }
+
+        fusionValues.pop_back();
     }
-
-    for (int i = 0; i < nCellsHeight; ++i)
-    {
-        for (int j = 0; j < nCellsWidth; ++j)
-        {
-            quickValues.push_back(defensePosition(i, j, defaultValues[i][j]));
-        }
-    }
-
-    for (int i = 0; i < nCellsHeight; ++i)
-    {
-        for (int j = 0; j < nCellsWidth; ++j)
-        {
-            heapValues.push_back(defensePosition(i, j, defaultValues[i][j]));
-        }
-    }
-
-    for (int i = 0; i < nCellsHeight; ++i)
-    {
-        for (int j = 0; j < nCellsWidth; ++j)
-        {
-            noorderValues.push_back(defensePosition(i, j, defaultCellValue(i, j, nCellsWidth, nCellsHeight, mapWidth, mapHeight, obstacles, *defenses.begin())));
-        }
-    }
-
-    //----------- NO ORDER -----------//
-    currentDefense = defenses.begin();
-    cNOrden.activar();
-    do
-    {
-        while (currentDefense != defenses.end())
-        {
-            maxValue = noOrderSort(noorderValues);
-            Vector3 positionSelect = cellCenterToPosition((maxValue)->x_, (maxValue)->y_, cellWidth, cellHeight);
-            if (factibilidad((maxValue)->x_, (maxValue)->y_, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
-            {
-                (*currentDefense)->position = positionSelect;
-                ++currentDefense;
-            }
-            noorderValues.erase(maxValue);
-        }
-        rNoOrder++;
-
-    } while (cNOrden.tiempo() < (0.01 / (0.001 + 0.01)));
-    cNOrden.parar();
-
-    //----------- QUICK -----------//
-    currentDefense = defenses.begin();
-    cQuick.activar();
-    do
-    {
-        quickSort(quickValues, 0, quickValues.size() - 1);
-
-        while (currentDefense != defenses.end())
-        {
-            itQuick = quickValues.end() - 1;
-            Vector3 positionSelect = cellCenterToPosition((itQuick)->x_, (itQuick)->y_, cellWidth, cellHeight);
-            if (factibilidad((itQuick)->x_, (itQuick)->y_, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
-            {
-                (*currentDefense)->position = positionSelect;
-                ++currentDefense;
-            }
-
-            quickValues.pop_back();
-        }
-        rQuick++;
-
-    } while (cQuick.tiempo() < (0.01 / (0.001 + 0.01)));
-    cQuick.parar();
-
-    //----------- FUSION -----------//
-    currentDefense = defenses.begin();
-
-    cFusion.activar();
-    do
-    {
-        fusionSort(fusionValues, 0, fusionValues.size() - 1);
-        while (currentDefense != defenses.end())
-        {
-            itFusion = fusionValues.end() - 1;
-            Vector3 positionSelect = cellCenterToPosition((itFusion)->x_, (itFusion)->y_, cellWidth, cellHeight);
-            if (factibilidad((itFusion)->x_, (itFusion)->y_, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
-            {
-                (*currentDefense)->position = positionSelect;
-                ++currentDefense;
-            }
-
-            fusionValues.pop_back();
-        }
-        rFusion++;
-
-    } while (cFusion.tiempo() < (0.01 / (0.001 + 0.01)));
-    cFusion.parar();
-
-    //----------- HEAP -----------//
-    currentDefense = defenses.begin();
-    cHeap.activar();
-    do
-    {
-        heapSort(heapValues);
-        while (currentDefense != defenses.end())
-        {
-            itHeap = heapValues.end() - 1;
-            Vector3 positionSelect = cellCenterToPosition((itHeap)->x_, (itHeap)->y_, cellWidth, cellHeight);
-            if (factibilidad((itHeap)->x_, (itHeap)->y_, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
-            {
-                (*currentDefense)->position = positionSelect;
-                ++currentDefense;
-            }
-
-            heapValues.pop_back();
-        }
-
-        rHeap++;
-
-    } while (cHeap.tiempo() < (0.01 / (0.001 + 0.01)));
-    cHeap.parar();
-
-    // for (int i = 0; i < fusionValues.size(); ++i)
-    // {
-    //     std::cout << fusionValues[i] << std::endl;
-    // }
-
-    // std::cout << "\n"
-    //           << std::endl;
-
-    // for (int i = 0; i < quickValues.size(); ++i)
-    // {
-    //     std::cout << quickValues[i] << std::endl;
-    // }
-
-    std::cout << (nCellsWidth * nCellsHeight)
-              << '\t' << cNOrden.tiempo() / rNoOrder
-              << '\t' << cFusion.tiempo() / rFusion
-              << '\t' << cQuick.tiempo() / rQuick
-              << '\t' << cHeap.tiempo() / rHeap
-              << std::endl;
 }
