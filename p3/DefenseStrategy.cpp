@@ -45,28 +45,24 @@ void positionToCell(const Vector3 pos, int &i_out, int &j_out, float cellWidth, 
     j_out = (int)(pos.x * 1.0f / cellWidth);
 }
 
-Vector3 SelectionDefense(std::vector<std::vector<float>> &DefenseValue, float cellWidht, float cellHeight, int nCellsWidth, int nCellsHeight, int idDef, std::list<Defense *> defenses)
+Vector3 SelectionMaxDefense(std::vector<defensePosition> &DefenseValue, float cellWidht, float cellHeight, int nCellsWidth, int nCellsHeight, int idDef, std::list<Defense *> defenses)
 {
     float maxValue = -INF_F;
-    int posH, posW;
+    int posH;
 
-    for (int i = 0; i < nCellsHeight; ++i)
+    for (int j = 0; j < DefenseValue.size(); ++j)
     {
-        for (int j = 0; j < nCellsWidth; ++j)
+        if (idDef != (*defenses.begin())->id)
         {
-            if (idDef != (*defenses.begin())->id)
+            if (maxValue < DefenseValue[i][j])
             {
-                if (maxValue < DefenseValue[i][j])
-                {
-                    maxValue = DefenseValue[i][j];
-                    posH = i;
-                    posW = j;
-                }
+                maxValue = DefenseValue[i][j];
+                posH = i;
             }
         }
     }
 
-    DefenseValue[posH][posW] = -INF_F;
+    DefenseValue[posH] = -INF_F;
 
     return cellCenterToPosition(posH, posW, cellWidht, cellHeight);
 }
@@ -305,7 +301,7 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
         }
     }
 
-    std::sort(defaultValues.begin(),defaultValues.end());
+    std::sort(defaultValues.begin(), defaultValues.end());
 
     //----------- QUICK -----------//
     quickValues = defaultValues;
@@ -315,17 +311,18 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
     {
         quickSort(quickValues, 0, quickValues.size() - 1);
 
+        itQuick = quickValues.end() - 1;
         while (currentDefense != defenses.end())
         {
-            itQuick = quickValues.end() - 1;
             Vector3 positionSelect = cellCenterToPosition((itQuick)->x_, (itQuick)->y_, cellWidth, cellHeight);
             if (factibilidad((itQuick->x_), (itQuick->y_), nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
             {
                 (*currentDefense)->position = positionSelect;
                 ++currentDefense;
-                quickValues.pop_back();
+                quickValues.erase(itQuick);
+                itQuick = quickValues.end() - 1;
             }
-
+            itQuick--;
         }
         rQuick++;
 
@@ -362,17 +359,18 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
     do
     {
         fusionSort(fusionValues, 0, fusionValues.size() - 1);
+        itFusion = fusionValues.end() - 1;
         while (currentDefense != defenses.end())
         {
-            itFusion = fusionValues.end() - 1;
             Vector3 positionSelect = cellCenterToPosition((itFusion)->x_, (itFusion)->y_, cellWidth, cellHeight);
             if (factibilidad((itFusion)->x_, (itFusion)->y_, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
             {
                 (*currentDefense)->position = positionSelect;
                 ++currentDefense;
-                fusionValues.pop_back();
+                fusionValues.erase(itFusion);
+                itFusion = fusionValues.end() - 1;
             }
-
+            itFusion--;
         }
         rFusion++;
 
@@ -386,17 +384,18 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
     do
     {
         heapSort(heapValues);
+        itHeap = heapValues.end() - 1;
         while (currentDefense != defenses.end())
         {
-            itHeap = heapValues.end() - 1;
             Vector3 positionSelect = cellCenterToPosition((itHeap)->x_, (itHeap)->y_, cellWidth, cellHeight);
             if (factibilidad((itHeap)->x_, (itHeap)->y_, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
             {
                 (*currentDefense)->position = positionSelect;
                 ++currentDefense;
-                heapValues.pop_back();
+                heapValues.erase(itHeap);
+                itHeap = heapValues.end() - 1;
             }
-
+            itHeap--;
         }
 
         rHeap++;
