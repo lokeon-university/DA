@@ -47,7 +47,7 @@ void positionToCell(const Vector3 pos, int &i_out, int &j_out, float cellWidth, 
 
 Vector3 SelectionMaxDefense(std::vector<defensePosition> &DefenseValue, float cellWidht, float cellHeight, int nCellsWidth, int nCellsHeight, std::list<Defense *> defenses)
 {
-    defensePosition maxValue = -INF_F;
+    defensePosition maxValue;
     int posH;
 
     for (int j = 0; j < DefenseValue.size(); ++j)
@@ -272,8 +272,9 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
     std::vector<defensePosition> fusionValues, heapValues, quickValues, noorderValues;
     std::vector<defensePosition>::iterator itFusion, itHeap, itQuick;
     List<Defense *>::iterator currentDefense;
+    List<Defense *> defenseAux = defenses;
     long int rFusion = 0, rQuick = 0, rHeap = 0, rNoOrder = 0;
-    int row, col;
+    int row, col, maxAttemps = 1000;
     cronometro cFusion, cHeap, cQuick, cNOrden;
 
     for (int i = 0; i < nCellsHeight; ++i)
@@ -284,31 +285,37 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
         }
     }
 
-    //----------- NO ORDER -----------//
     noorderValues = defaultValues;
-    currentDefense = defenses.begin();
+
+    std::sort(defaultValues.begin(), defaultValues.end());
+
+    //----------- NO ORDER -----------//
+    currentDefense = defenseAux.begin();
     cNOrden.activar();
     do
     {
-        while (currentDefense != defenses.end())
+        while (currentDefense != defenseAux.end() && !defenseAux.empty() && maxAttemps > 0)
         {
             Vector3 positionSelect = SelectionMaxDefense(noorderValues, cellWidth, cellHeight, nCellsWidth, nCellsHeight, defenses);
             positionToCell(positionSelect, row, col, cellWidth, cellHeight);
             if (factibilidad(row, col, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
             {
+                maxAttemps = 1000;
                 (*currentDefense)->position = positionSelect;
-                ++currentDefense;
+                defenseAux.erase(currentDefense);
+                currentDefense = defenseAux.begin();
             }
+            ++currentDefense;
         }
+        maxAttemps--;
         rNoOrder++;
 
     } while (cNOrden.tiempo() < (0.01 / (0.001 + 0.01)));
     cNOrden.parar();
 
-    std::sort(defaultValues.begin(), defaultValues.end());
-
     //----------- QUICK -----------//
     quickValues = defaultValues;
+    maxAttemps = 1000;
     currentDefense = defenses.begin();
     cQuick.activar();
     do
@@ -316,11 +323,12 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
         quickSort(quickValues, 0, quickValues.size() - 1);
 
         itQuick = quickValues.end() - 1;
-        while (currentDefense != defenses.end())
+        while (currentDefense != defenses.end() && maxAttemps > 0)
         {
             Vector3 positionSelect = cellCenterToPosition((itQuick)->x_, (itQuick)->y_, cellWidth, cellHeight);
             if (factibilidad((itQuick->x_), (itQuick->y_), nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
             {
+                maxAttemps = 1000;
                 (*currentDefense)->position = positionSelect;
                 ++currentDefense;
                 quickValues.erase(itQuick);
@@ -329,23 +337,26 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
             itQuick--;
         }
         rQuick++;
+        maxAttemps--;
 
     } while (cQuick.tiempo() < (0.01 / (0.001 + 0.01)));
     cQuick.parar();
 
     //----------- FUSION -----------//
     fusionValues = defaultValues;
+    maxAttemps = 1000;
     currentDefense = defenses.begin();
     cFusion.activar();
     do
     {
         fusionSort(fusionValues, 0, fusionValues.size() - 1);
         itFusion = fusionValues.end() - 1;
-        while (currentDefense != defenses.end())
+        while (currentDefense != defenses.end() && maxAttemps > 0)
         {
             Vector3 positionSelect = cellCenterToPosition((itFusion)->x_, (itFusion)->y_, cellWidth, cellHeight);
             if (factibilidad((itFusion)->x_, (itFusion)->y_, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
             {
+                maxAttemps = 1000;
                 (*currentDefense)->position = positionSelect;
                 ++currentDefense;
                 fusionValues.erase(itFusion);
@@ -354,23 +365,26 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
             itFusion--;
         }
         rFusion++;
+        maxAttemps--;
 
     } while (cFusion.tiempo() < (0.01 / (0.001 + 0.01)));
     cFusion.parar();
 
     //----------- HEAP -----------//
     heapValues = defaultValues;
+    maxAttemps = 1000;
     currentDefense = defenses.begin();
     cHeap.activar();
     do
     {
         heapSort(heapValues);
         itHeap = heapValues.end() - 1;
-        while (currentDefense != defenses.end())
+        while (currentDefense != defenses.end() && maxAttemps > 0)
         {
             Vector3 positionSelect = cellCenterToPosition((itHeap)->x_, (itHeap)->y_, cellWidth, cellHeight);
             if (factibilidad((itHeap)->x_, (itHeap)->y_, nCellsWidth, nCellsHeight, mapWidth, mapHeight, (*currentDefense)->id, obstacles, defenses))
             {
+                maxAttemps = 1000;
                 (*currentDefense)->position = positionSelect;
                 ++currentDefense;
                 heapValues.erase(itHeap);
@@ -378,8 +392,8 @@ void DEF_LIB_EXPORTED placeDefenses3(bool **freeCells, int nCellsWidth, int nCel
             }
             itHeap--;
         }
-
         rHeap++;
+        maxAttemps--;
 
     } while (cHeap.tiempo() < (0.01 / (0.001 + 0.01)));
     cHeap.parar();
