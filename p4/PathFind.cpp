@@ -34,6 +34,12 @@ float heuristic(AStarNode *originNode, AStarNode *targetNode, float **additional
     return _distance(originNode->position, targetNode->position) + additionalCost[row][col];
 }
 
+// Son Vector3, asi que distancia a 0 y yata
+bool operator==(const AStarNode &s, const AStarNode &d)
+{
+    return (_distance(s.position, d.position) == 0);
+}
+
 // rellenar la matriz de costes , no tocar , hasta implementar el Algoritmo A*, luego tocar esto pa tener mejor cosas
 void DEF_LIB_EXPORTED calculateAdditionalCost(float **additionalCost, int cellsWidth, int cellsHeight, float mapWidth, float mapHeight, List<Object *> obstacles, List<Defense *> defenses)
 {
@@ -60,59 +66,67 @@ void DEF_LIB_EXPORTED calculateAdditionalCost(float **additionalCost, int cellsW
 // meter el camino recorriendo los padres de AsterNode y meterlo en path (push_back) orden de origen->destino
 void DEF_LIB_EXPORTED calculatePath(AStarNode *originNode, AStarNode *targetNode, int cellsWidth, int cellsHeight, float mapWidth, float mapHeight, float **additionalCost, std::list<Vector3> &path)
 {
-
-    int maxIter = 100;
-    bool target = false, opened = false, closed = false;
+    bool target = false;
     std::vector<AStarNode *> open, close;
-    List<AStarNode *>::iterator currentAdjacent;
-    std::vector<AStarNode *>::iterator currentOpened, currentClosed;
+    List<AStarNode *>::iterator adjacent;
+    float distance;
 
     AStarNode *current = originNode;
     current->G = 0;
     current->H = heuristic(originNode, targetNode, additionalCost, cellsWidth, cellsHeight);
     current->F = current->G + current->H;
     open.push_back(current);
-    std::make_heap(open.begin(),close.end());
+    std::make_heap(open.begin(), close.end());
 
     while (!target && !open.empty())
     { // @todo ensure current and target are connected
 
         current = open.front();
-        std::pop_heap(open.begin(),close.end());
-
-        if (current == targetNode)
+        std::pop_heap(open.begin(), close.end()); // mirar si hace falta sobrecarga o no
+        close.push_back(current);
+        //comprobar posiciones, si son la misma
+        if (*current == *targetNode)
         {
             target = true;
         }
         else
         {
-        }
-
-        float min = INF_F;
-        AStarNode *o = NULL;
-        for (List<AStarNode *>::iterator it = current->adjacents.begin(); it != current->adjacents.end(); ++it)
-        {
-            float dist = _sdistance((*it)->position, targetNode->position);
-            if (additionalCost != NULL)
+            // miramos los adyacentes
+            for (adjacent = current->adjacents.begin(); adjacent != current->adjacents.end(); adjacent++)
             {
-                dist += additionalCost[(int)((*it)->position.y / cellsHeight)][(int)((*it)->position.x / cellsWidth)];
-            }
-            //std::cout << (*it)->position.y << ", " << (*it)->position.x << std::endl;
-            if (dist < min)
-            {
-                min = dist;
-                o = (*it);
+                // que no este cerrado
+                if (std::find(close.begin(), close.end(), *adjacent) == close.end())
+                {
+                    //que no este en los abiertos
+                    if (std::find(open.begin(), open.end(), *adjacent) == open.end())
+                    {
+                        (*adjacent)->parent = current;
+                        (*adjacent)->H = heuristic((*adjacent), targetNode, additionalCost, cellsWidth, cellsHeight);
+                        (*adjacent)->G = current->G + _distance(current->position, (*adjacent)->position);
+                        (*adjacent)->F = (*adjacent)->H + (*adjacent)->G;
+                        open.push_back((*adjacent));
+                        std::push_heap(open.begin(), open.end());
+                    }
+                    else
+                    {
+                        distance = _distance(current->position, (*adjacent)->position);
+                        if ((*adjacent)->G > current->G + distance)
+                        {
+                            (*adjacent)->parent = current;
+                            (*adjacent)->G = current->G + distance;
+                            (*adjacent)->F = (*adjacent)->H + (*adjacent)->G;
+                            std::sort_heap(open.begin(), open.end());
+                        }
+                    }
+                }
             }
         }
 
-        current = o;
-
-        if (current == NULL)
+        //recuperar
+        while (current->parent != originNode)
         {
-            break;
+            current = current->parent;
+            path.push_back(current->position);
         }
-
-        path.push_back(current->position);
-        --maxIter;
     }
 }
