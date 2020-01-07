@@ -29,6 +29,9 @@ void positionToCell(const Vector3 pos, int &i_out, int &j_out, float cellWidth, 
 
 float heuristic(AStarNode *originNode, AStarNode *targetNode, float **additionalCost, float cellWidth, float cellHeight)
 {
+    int row, col;
+    positionToCell(originNode->position, row, col, cellWidth, cellHeight);
+    return _distance(originNode->position, targetNode->position) + additionalCost[row][col];
 }
 
 // rellenar la matriz de costes , no tocar , hasta implementar el Algoritmo A*, luego tocar esto pa tener mejor cosas
@@ -60,15 +63,31 @@ void DEF_LIB_EXPORTED calculatePath(AStarNode *originNode, AStarNode *targetNode
 
     int maxIter = 100;
     bool target = false, opened = false, closed = false;
-    std::vector<AStarNode *> opened, closed;
+    std::vector<AStarNode *> open, close;
+    List<AStarNode *>::iterator currentAdjacent;
+    std::vector<AStarNode *>::iterator currentOpened, currentClosed;
 
     AStarNode *current = originNode;
     current->G = 0;
     current->H = heuristic(originNode, targetNode, additionalCost, cellsWidth, cellsHeight);
     current->F = current->G + current->H;
+    open.push_back(current);
+    std::make_heap(open.begin(),close.end());
 
-    while (current != targetNode && maxIter > 0)
+    while (!target && !open.empty())
     { // @todo ensure current and target are connected
+
+        current = open.front();
+        std::pop_heap(open.begin(),close.end());
+
+        if (current == targetNode)
+        {
+            target = true;
+        }
+        else
+        {
+        }
+
         float min = INF_F;
         AStarNode *o = NULL;
         for (List<AStarNode *>::iterator it = current->adjacents.begin(); it != current->adjacents.end(); ++it)
