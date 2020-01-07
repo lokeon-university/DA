@@ -21,14 +21,18 @@ Vector3 cellCenterToPosition(int i, int j, float cellWidth, float cellHeight)
 {
     return Vector3((j * cellWidth) + cellWidth * 0.5f, (i * cellHeight) + cellHeight * 0.5f, 0);
 }
-
-float heuristic(AStarNode *originNode, AStarNode *targetNode,float **additionalCost, float cellWidth, float cellHeight)
+void positionToCell(const Vector3 pos, int &i_out, int &j_out, float cellWidth, float cellHeight)
 {
-
+    i_out = (int)(pos.y * 1.0f / cellHeight);
+    j_out = (int)(pos.x * 1.0f / cellWidth);
 }
 
-    // rellenar la matriz de costes , no tocar , hasta implementar el Algoritmo A*, luego tocar esto pa tener mejor cosas
-    void DEF_LIB_EXPORTED calculateAdditionalCost(float **additionalCost, int cellsWidth, int cellsHeight, float mapWidth, float mapHeight, List<Object *> obstacles, List<Defense *> defenses)
+float heuristic(AStarNode *originNode, AStarNode *targetNode, float **additionalCost, float cellWidth, float cellHeight)
+{
+}
+
+// rellenar la matriz de costes , no tocar , hasta implementar el Algoritmo A*, luego tocar esto pa tener mejor cosas
+void DEF_LIB_EXPORTED calculateAdditionalCost(float **additionalCost, int cellsWidth, int cellsHeight, float mapWidth, float mapHeight, List<Object *> obstacles, List<Defense *> defenses)
 {
 
     float cellWidth = mapWidth / cellsWidth;
