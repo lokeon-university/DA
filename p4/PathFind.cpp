@@ -35,9 +35,14 @@ float heuristic(AStarNode *originNode, AStarNode *targetNode, float **additional
 }
 
 // Son Vector3, asi que distancia a 0 y yata
-bool operator==(const AStarNode &s, const AStarNode &d)
+bool operator==(const AStarNode o, const AStarNode t)
 {
-    return (_distance(s.position, d.position) == 0);
+    return (_distance(o.position, t.position) == 0.0);
+}
+
+bool heapMinimum(const AStarNode *o, const AStarNode *t)
+{
+    return (o->F > t->F);
 }
 
 // rellenar la matriz de costes , no tocar , hasta implementar el Algoritmo A*, luego tocar esto pa tener mejor cosas
@@ -76,13 +81,13 @@ void DEF_LIB_EXPORTED calculatePath(AStarNode *originNode, AStarNode *targetNode
     current->H = heuristic(originNode, targetNode, additionalCost, cellsWidth, cellsHeight);
     current->F = current->G + current->H;
     open.push_back(current);
-    std::make_heap(open.begin(), close.end());
+    std::make_heap(open.begin(), open.end());
 
     while (!target && !open.empty())
     { // @todo ensure current and target are connected
-
         current = open.front();
-        std::pop_heap(open.begin(), close.end()); // mirar si hace falta sobrecarga o no
+        std::pop_heap(open.begin(), open.end(), heapMinimum);
+        open.pop_back();
         close.push_back(current);
         //comprobar posiciones, si son la misma
         if (*current == *targetNode)
@@ -95,17 +100,17 @@ void DEF_LIB_EXPORTED calculatePath(AStarNode *originNode, AStarNode *targetNode
             for (adjacent = current->adjacents.begin(); adjacent != current->adjacents.end(); adjacent++)
             {
                 // que no este cerrado
-                if (std::find(close.begin(), close.end(), *adjacent) == close.end())
+                if (std::find(close.begin(), close.end(), (*adjacent)) == close.end())
                 {
                     //que no este en los abiertos
-                    if (std::find(open.begin(), open.end(), *adjacent) == open.end())
+                    if (std::find(open.begin(), open.end(), (*adjacent)) == open.end())
                     {
                         (*adjacent)->parent = current;
-                        (*adjacent)->H = heuristic((*adjacent), targetNode, additionalCost, cellsWidth, cellsHeight);
                         (*adjacent)->G = current->G + _distance(current->position, (*adjacent)->position);
+                        (*adjacent)->H = heuristic((*adjacent), targetNode, additionalCost, cellsWidth, cellsHeight);
                         (*adjacent)->F = (*adjacent)->H + (*adjacent)->G;
                         open.push_back((*adjacent));
-                        std::push_heap(open.begin(), open.end());
+                        std::push_heap(open.begin(), open.end(), heapMinimum);
                     }
                     else
                     {
@@ -115,18 +120,17 @@ void DEF_LIB_EXPORTED calculatePath(AStarNode *originNode, AStarNode *targetNode
                             (*adjacent)->parent = current;
                             (*adjacent)->G = current->G + distance;
                             (*adjacent)->F = (*adjacent)->H + (*adjacent)->G;
-                            std::sort_heap(open.begin(), open.end());
+                            std::sort_heap(open.begin(), open.end(), heapMinimum);
                         }
                     }
                 }
             }
         }
-
-        //recuperar
-        while (current->parent != originNode)
-        {
-            current = current->parent;
-            path.push_back(current->position);
-        }
+    }
+    //recuperar
+    while (current->parent != originNode)
+    {
+        current = current->parent;
+        path.push_front(current->position);
     }
 }
