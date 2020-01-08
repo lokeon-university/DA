@@ -27,15 +27,13 @@ void positionToCell(const Vector3 pos, int &i_out, int &j_out, float cellWidth, 
     j_out = (int)(pos.x * 1.0f / cellWidth);
 }
 
-float estimatedDistance(AStarNode *originNode, AStarNode *targetNode, float **additionalCost, float cellWidth, float cellHeight)
+float estimatedDistance(AStarNode *originNode, AStarNode *targetNode, float cellWidth, float cellHeight)
 {
-    int row, col;
-    positionToCell(originNode->position, row, col, cellWidth, cellHeight);
-    return _distance(originNode->position, targetNode->position) + additionalCost[row][col];
+    return _distance(originNode->position, targetNode->position);
 }
 
 // Son Vector3, asi que distancia a 0 y yata
-bool operator==(const AStarNode& o, const AStarNode& t)
+bool operator==(const AStarNode &o, const AStarNode &t)
 {
     return (_distance(o.position, t.position) == 0.0);
 }
@@ -51,7 +49,7 @@ void DEF_LIB_EXPORTED calculateAdditionalCost(float **additionalCost, int cellsW
 
     float cellWidth = mapWidth / cellsWidth;
     float cellHeight = mapHeight / cellsHeight;
-    float cost = 0.0 ;
+    float cost = 0.0;
     Vector3 cellPosition;
     List<Object *>::iterator itObs;
     List<Defense *>::iterator itDef;
@@ -61,18 +59,27 @@ void DEF_LIB_EXPORTED calculateAdditionalCost(float **additionalCost, int cellsW
         for (int j = 0; j < cellsWidth; ++j)
         {
             cellPosition = cellCenterToPosition(i, j, cellWidth, cellHeight);
-            
-            cost += abs(j - cellsWidth / 2) + abs(i - cellsHeight / 2);
-            
+
             for (itDef = defenses.begin(); itDef != defenses.end(); ++itDef)
             {
-                cost += _distance(cellPosition, (*itDef)->position);
+                if ((*defenses.begin())->range > _distance(cellPosition, (*defenses.begin())->position))
+                {
+                    cost += _distance(cellPosition, (*defenses.begin())->position);
+                }
+
+                if ((*itDef)->radio > _distance(cellPosition, (*itDef)->position))
+                {
+                    cost += _distance(cellPosition, (*itDef)->position) / (*itDef)->radio;
+                }
             }
 
             //Distancia respecto a los obstacles
             for (itObs = obstacles.begin(); itObs != obstacles.end(); ++itObs)
             {
-                cost += _distance(cellPosition, (*itObs)->position);
+                if ((*itObs)->radio > _distance(cellPosition, (*itObs)->position))
+                {
+                    cost += _distance(cellPosition, (*itObs)->position);
+                }
             }
 
             additionalCost[i][j] = cost;
@@ -87,10 +94,13 @@ void DEF_LIB_EXPORTED calculatePath(AStarNode *originNode, AStarNode *targetNode
     std::vector<AStarNode *> open, close;
     List<AStarNode *>::iterator adjacent;
     float distance;
+    int row, col;
 
     AStarNode *current = originNode;
+    positionToCell(originNode->position, row, col, cellsWidth, cellsHeight);
     current->G = 0;
-    current->H = estimatedDistance(originNode, targetNode, additionalCost, cellsWidth, cellsHeight);
+    current->H = estimatedDistance(originNode, targetNode, cellsWidth, cellsHeight) + additionalCost[row][col];
+    std::cout << estimatedDistance(originNode, targetNode, cellsWidth, cellsHeight) + additionalCost[row][col] << std::endl;
     current->F = current->G + current->H;
     open.push_back(current);
     std::make_heap(open.begin(), open.end());
@@ -118,8 +128,10 @@ void DEF_LIB_EXPORTED calculatePath(AStarNode *originNode, AStarNode *targetNode
                     if (std::find(open.begin(), open.end(), (*adjacent)) == open.end())
                     {
                         (*adjacent)->parent = current;
+                        positionToCell((*adjacent)->position, row, col, cellsWidth, cellsHeight);
                         (*adjacent)->G = current->G + _distance(current->position, (*adjacent)->position);
-                        (*adjacent)->H = estimatedDistance((*adjacent), targetNode, additionalCost, cellsWidth, cellsHeight);
+                        (*adjacent)->H = estimatedDistance((*adjacent), targetNode, cellsWidth, cellsHeight) + additionalCost[row][col];
+                        std::cout << estimatedDistance(originNode, targetNode, cellsWidth, cellsHeight) + additionalCost[row][col] << std::endl;
                         (*adjacent)->F = (*adjacent)->H + (*adjacent)->G;
                         open.push_back((*adjacent));
                         std::push_heap(open.begin(), open.end(), heapMinimum);
