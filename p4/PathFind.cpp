@@ -27,7 +27,7 @@ void positionToCell(const Vector3 pos, int &i_out, int &j_out, float cellWidth, 
     j_out = (int)(pos.x * 1.0f / cellWidth);
 }
 
-float heuristic(AStarNode *originNode, AStarNode *targetNode, float **additionalCost, float cellWidth, float cellHeight)
+float estimatedDistance(AStarNode *originNode, AStarNode *targetNode, float **additionalCost, float cellWidth, float cellHeight)
 {
     int row, col;
     positionToCell(originNode->position, row, col, cellWidth, cellHeight);
@@ -35,7 +35,7 @@ float heuristic(AStarNode *originNode, AStarNode *targetNode, float **additional
 }
 
 // Son Vector3, asi que distancia a 0 y yata
-bool operator==(const AStarNode o, const AStarNode t)
+bool operator==(const AStarNode& o, const AStarNode& t)
 {
     return (_distance(o.position, t.position) == 0.0);
 }
@@ -51,23 +51,35 @@ void DEF_LIB_EXPORTED calculateAdditionalCost(float **additionalCost, int cellsW
 
     float cellWidth = mapWidth / cellsWidth;
     float cellHeight = mapHeight / cellsHeight;
+    float cost = 0.0 ;
+    Vector3 cellPosition;
+    List<Object *>::iterator itObs;
+    List<Defense *>::iterator itDef;
 
     for (int i = 0; i < cellsHeight; ++i)
     {
         for (int j = 0; j < cellsWidth; ++j)
         {
-            Vector3 cellPosition = cellCenterToPosition(i, j, cellWidth, cellHeight);
-            float cost = 0;
-            if ((i + j) % 2 == 0)
+            cellPosition = cellCenterToPosition(i, j, cellWidth, cellHeight);
+            
+            cost += abs(j - cellsWidth / 2) + abs(i - cellsHeight / 2);
+            
+            for (itDef = defenses.begin(); itDef != defenses.end(); ++itDef)
             {
-                cost = cellWidth * 100;
+                cost += _distance(cellPosition, (*itDef)->position);
+            }
+
+            //Distancia respecto a los obstacles
+            for (itObs = obstacles.begin(); itObs != obstacles.end(); ++itObs)
+            {
+                cost += _distance(cellPosition, (*itObs)->position);
             }
 
             additionalCost[i][j] = cost;
         }
     }
 }
-// AStarNODE* tiene to la informacion pa implementar el Algoritmo A*
+
 // meter el camino recorriendo los padres de AsterNode y meterlo en path (push_back) orden de origen->destino
 void DEF_LIB_EXPORTED calculatePath(AStarNode *originNode, AStarNode *targetNode, int cellsWidth, int cellsHeight, float mapWidth, float mapHeight, float **additionalCost, std::list<Vector3> &path)
 {
@@ -78,7 +90,7 @@ void DEF_LIB_EXPORTED calculatePath(AStarNode *originNode, AStarNode *targetNode
 
     AStarNode *current = originNode;
     current->G = 0;
-    current->H = heuristic(originNode, targetNode, additionalCost, cellsWidth, cellsHeight);
+    current->H = estimatedDistance(originNode, targetNode, additionalCost, cellsWidth, cellsHeight);
     current->F = current->G + current->H;
     open.push_back(current);
     std::make_heap(open.begin(), open.end());
@@ -107,7 +119,7 @@ void DEF_LIB_EXPORTED calculatePath(AStarNode *originNode, AStarNode *targetNode
                     {
                         (*adjacent)->parent = current;
                         (*adjacent)->G = current->G + _distance(current->position, (*adjacent)->position);
-                        (*adjacent)->H = heuristic((*adjacent), targetNode, additionalCost, cellsWidth, cellsHeight);
+                        (*adjacent)->H = estimatedDistance((*adjacent), targetNode, additionalCost, cellsWidth, cellsHeight);
                         (*adjacent)->F = (*adjacent)->H + (*adjacent)->G;
                         open.push_back((*adjacent));
                         std::push_heap(open.begin(), open.end(), heapMinimum);
