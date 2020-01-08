@@ -66,6 +66,11 @@ void DEF_LIB_EXPORTED calculateAdditionalCost(float **additionalCost, int cellsW
                 {
                     cost += _distance(cellPosition, (*itDef)->position) / (*itDef)->radio;
                 }
+
+                if ((*itDef)->range > _distance(cellPosition, (*itDef)->position))
+                {
+                    cost += _distance(cellPosition, (*itDef)->position) / (*itDef)->range;
+                }
             }
 
             //Distancia respecto a los obstacles
