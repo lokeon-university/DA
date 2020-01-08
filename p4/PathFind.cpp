@@ -62,14 +62,9 @@ void DEF_LIB_EXPORTED calculateAdditionalCost(float **additionalCost, int cellsW
 
             for (itDef = defenses.begin(); itDef != defenses.end(); ++itDef)
             {
-                if ((*defenses.begin())->radio > _distance(cellPosition, (*defenses.begin())->position))
+                if ((*itDef)->radio > _distance(cellPosition, (*itDef)->position))
                 {
-                    cost += _distance(cellPosition, (*defenses.begin())->position);
-                }
-
-                if ((*itDef)->range > _distance(cellPosition, (*itDef)->position))
-                {
-                    cost += _distance(cellPosition, (*itDef)->position) / (*itDef)->range;
+                    cost += _distance(cellPosition, (*itDef)->position) / (*itDef)->radio;
                 }
             }
 
