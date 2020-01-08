@@ -100,7 +100,7 @@ void DEF_LIB_EXPORTED calculatePath(AStarNode *originNode, AStarNode *targetNode
     positionToCell(originNode->position, row, col, cellsWidth, cellsHeight);
     current->G = 0;
     current->H = estimatedDistance(originNode, targetNode, cellsWidth, cellsHeight) + additionalCost[row][col];
-    std::cout << estimatedDistance(originNode, targetNode, cellsWidth, cellsHeight) + additionalCost[row][col] << std::endl;
+    // std::cout << estimatedDistance(originNode, targetNode, cellsWidth, cellsHeight) + additionalCost[row][col] << std::endl;
     current->F = current->G + current->H;
     open.push_back(current);
     std::make_heap(open.begin(), open.end());
@@ -131,7 +131,7 @@ void DEF_LIB_EXPORTED calculatePath(AStarNode *originNode, AStarNode *targetNode
                         positionToCell((*adjacent)->position, row, col, cellsWidth, cellsHeight);
                         (*adjacent)->G = current->G + _distance(current->position, (*adjacent)->position);
                         (*adjacent)->H = estimatedDistance((*adjacent), targetNode, cellsWidth, cellsHeight) + additionalCost[row][col];
-                        std::cout << estimatedDistance(originNode, targetNode, cellsWidth, cellsHeight) + additionalCost[row][col] << std::endl;
+                        // std::cout << estimatedDistance(originNode, targetNode, cellsWidth, cellsHeight) + additionalCost[row][col] << std::endl;
                         (*adjacent)->F = (*adjacent)->H + (*adjacent)->G;
                         open.push_back((*adjacent));
                         std::push_heap(open.begin(), open.end(), heapMinimum);
