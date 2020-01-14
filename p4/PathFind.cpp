@@ -67,7 +67,6 @@ void DEF_LIB_EXPORTED calculateAdditionalCost(float **additionalCost, int cellsW
                     cost += _distance(cellPosition, (*itDef)->position) / (*itDef)->radio;
                 }
             }
-
             //Distancia respecto a los obstacles
             for (itObs = obstacles.begin(); itObs != obstacles.end(); ++itObs)
             {
