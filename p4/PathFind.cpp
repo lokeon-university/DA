@@ -1,8 +1,6 @@
 // ###### Config options ################
 
 #define PRINT_PATHS 1
-// valorar celdas segun la f y la heuristica , el camino de los uco es de donde sale(bordes) hsata el centro de extraccion
-// targt_node : centro de extraccion OBJETIVO: conseguir menos tiempo -> ahora somos UCOS queremos destruir defensas
 
 // #######################################
 
@@ -32,7 +30,6 @@ float estimatedDistance(AStarNode *originNode, AStarNode *targetNode, float cell
     return _distance(originNode->position, targetNode->position);
 }
 
-// Son Vector3, asi que distancia a 0 y yata
 bool operator==(const AStarNode &o, const AStarNode &t)
 {
     return (_distance(o.position, t.position) == 0.0);
@@ -43,7 +40,6 @@ bool heapMinimum(const AStarNode *o, const AStarNode *t)
     return (o->F > t->F);
 }
 
-// rellenar la matriz de costes , no tocar , hasta implementar el Algoritmo A*, luego tocar esto pa tener mejor cosas
 void DEF_LIB_EXPORTED calculateAdditionalCost(float **additionalCost, int cellsWidth, int cellsHeight, float mapWidth, float mapHeight, List<Object *> obstacles, List<Defense *> defenses)
 {
 
@@ -67,7 +63,7 @@ void DEF_LIB_EXPORTED calculateAdditionalCost(float **additionalCost, int cellsW
                     cost += _distance(cellPosition, (*itDef)->position) / (*itDef)->radio;
                 }
             }
-            //Distancia respecto a los obstacles
+
             for (itObs = obstacles.begin(); itObs != obstacles.end(); ++itObs)
             {
                 if ((*itObs)->radio > _distance(cellPosition, (*itObs)->position))
@@ -81,7 +77,6 @@ void DEF_LIB_EXPORTED calculateAdditionalCost(float **additionalCost, int cellsW
     }
 }
 
-// meter el camino recorriendo los padres de AsterNode y meterlo en path (push_back) orden de origen->destino
 void DEF_LIB_EXPORTED calculatePath(AStarNode *originNode, AStarNode *targetNode, int cellsWidth, int cellsHeight, float mapWidth, float mapHeight, float **additionalCost, std::list<Vector3> &path)
 {
     bool target = false;
@@ -100,25 +95,22 @@ void DEF_LIB_EXPORTED calculatePath(AStarNode *originNode, AStarNode *targetNode
     std::make_heap(open.begin(), open.end());
 
     while (!target && !open.empty())
-    { // @todo ensure current and target are connected
+    {
         current = open.front();
         std::pop_heap(open.begin(), open.end(), heapMinimum);
         open.pop_back();
         close.push_back(current);
-        //comprobar posiciones, si son la misma
+
         if (*current == *targetNode)
         {
             target = true;
         }
         else
         {
-            // miramos los adyacentes
             for (adjacent = current->adjacents.begin(); adjacent != current->adjacents.end(); adjacent++)
             {
-                // que no este cerrado
                 if (std::find(close.begin(), close.end(), (*adjacent)) == close.end())
                 {
-                    //que no este en los abiertos
                     if (std::find(open.begin(), open.end(), (*adjacent)) == open.end())
                     {
                         (*adjacent)->parent = current;
@@ -145,7 +137,7 @@ void DEF_LIB_EXPORTED calculatePath(AStarNode *originNode, AStarNode *targetNode
             }
         }
     }
-    //recuperar
+
     while (current->parent != originNode)
     {
         current = current->parent;
